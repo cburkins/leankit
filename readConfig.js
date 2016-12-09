@@ -19,6 +19,7 @@ module.exports.readConfigFile = function(configFilename, callback) {
 	// Convert to a key-value object
 	configObj= new Map(configArray);
 
+	// Done, now call the callback that was provided to us.  Node.js is so weird...
 	callback(configObj);
     });
 }

@@ -3,6 +3,7 @@ sprintf = require('sprintf-js').sprintf;
 printCards = require('./printCards.js').printCards;
 enhanceBoard = require('./enhanceBoard.js').enhanceBoard;
 readConfigFile = require('./readConfig.js').readConfigFile;
+var leankitConfigFilename = "./.leankit.config"
 
 // ---------------------------------------------------------------------------------------------
 
@@ -287,22 +288,20 @@ function getCommandLineArgs(defaultOptions) {
 // ---------------------------------------------------------------------------------------------
 
 
-readConfigFile('./leankit.config', function (data) {
+readConfigFile(leankitConfigFilename, function (data) {
 
-    // Create an empty object
+    // Create an empty object where we can accumulate settings from the options file
     defaultOptions = {}
-//    defaultOptions['email'] = data.get('email');
- //   defaultOptions.password = data.get('password');
 
-    console.log(data);
+    // Read through the key-value pairs from config file, and populate the settings object
+    // This settings object will be used only if corresponding command-line args are not provided
     for (var key of data.keys()) {
-	console.log(key)
-	console.log(data.get(key))
+	// Push the key-value pair into a javascript object
 	defaultOptions[key] = data.get(key);
     }
 
-
     // Get command-line args
+    // Command-line args will overwrite corresponding settings obtained from options file 
     argv = getCommandLineArgs(defaultOptions)
 
     // Give the given command-line args some sensible names

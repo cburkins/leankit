@@ -115,7 +115,7 @@ module.exports.printCards = function (cards, printOptions, pretty) {
 
     }
 
-    console.log("Pretty: ".concat(pretty));
+
     if (pretty) {
 	// Spit out the entire dataset, nicely arranged in columns
 	// Center-justify all the columns in the printout
