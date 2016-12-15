@@ -42,25 +42,41 @@ Config.read("./.leankit.config")
 email = Config.get("IrisPlatform", "email")
 password = Config.get("IrisPlatform", "password")
 
-print email
-print password
-
 req="https://jnj.leankit.com/kanban/api/board/372745411"
 req="https://jnj.leankit.com/kanban/api/board/372745411/getboardidentifiers"
-
 
 request = urllib2.Request(req)
 base64string = base64.encodestring('%s:%s' % (email, password)).replace('\n', '')
 request.add_header("Authorization", "Basic %s" % base64string)   
-result = urllib2.urlopen(request)
-jsonString = result.read()
 
-print jsonString
+# Gets HTML response. Gives access to the headers via the info() method
+response = urllib2.urlopen(request)
+#response.close()
 
-# response = urllib2.urlopen(req)
-# the_page = response.read()
+#
+print "The Headers are: ", response.info()
 
-# print("Content-Type: application/json\n\n");
-# print(the_page);
+# This is the response payload
+jsonString = response.read()
 
-# printTasks(the_page);
+print "jsonstring\n-------------------"
+print jsonString;
+print
+
+import json
+#data = json.loads(response.read().decode(response.info().get_param('charset') or 'utf-8'))
+
+#data = json.loads(response.read().decode('utf-8'))
+# No Json object
+
+data = json.loads(jsonString)
+print ("JSON Object\n------------------")
+print data
+print
+
+print ("Testing\n--------------------")
+print data['ReplyText']
+print data['ReplyData'][0]['Lanes'][0]['Name']
+print
+
+
