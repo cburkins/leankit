@@ -3,7 +3,10 @@ sprintf = require('sprintf-js').sprintf;
 printCards = require('./printCards.js').printCards;
 enhanceBoard = require('./enhanceBoard.js').enhanceBoard;
 readConfigFile = require('./readConfig.js').readConfigFile;
-var leankitConfigFilename = "./.leankit.config"
+//var leankitConfigFilename = "./.leankit.config"
+// Add the CWD to the config file name, allows us to run from other dirs
+var leankitConfigFilename = __dirname + "/.leankit.config"
+
 
 // ---------------------------------------------------------------------------------------------
 
