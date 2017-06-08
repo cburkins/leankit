@@ -90,7 +90,7 @@ printCard = function (c, lineCount, printOptions) {
 
 // ---------------------------------------------------------------------------------------------
 
-module.exports.printCards = function (cards, printOptions, pretty) {
+module.exports.printCards = function (cards, printOptions, pretty, jsonOutput) {
     
     // Expecting a flat array of all the cards that you want to print
 
@@ -128,6 +128,9 @@ module.exports.printCards = function (cards, printOptions, pretty) {
         // Use columnify to print JSON object with column headers
         console.log(columnify(printData, columnifyOptions));
     }
+    else if (jsonOutput) {
+	console.log(JSON.stringify(printData));
+    }
     else {
         // Print out key-value pairs which is handy for grep filters
         for (var i=0; i<printData.length; i++) {
@@ -140,6 +143,7 @@ module.exports.printCards = function (cards, printOptions, pretty) {
             console.log();
         }
     }
+
     console.log();
 
 }

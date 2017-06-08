@@ -26,7 +26,7 @@ function printLanes(board) {
 // ---------------------------------------------------------------------------------------------
 
 // Given a Leankit "board" object, print all the cards on that board
-function printBoardCards(board, printOptions, pretty) {
+function printBoardCards(board, printOptions, pretty, jsonOutput) {
 
     var lanes = board.Lanes;
     var cards = [];
@@ -38,7 +38,7 @@ function printBoardCards(board, printOptions, pretty) {
 	}
     }
 
-    printCards(cards, printOptions, pretty);
+    printCards(cards, printOptions, pretty, jsonOutput);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -269,6 +269,7 @@ function getCommandLineArgs(defaultOptions) {
 	.option( "showMethods", { describe: "Show all object methods for Leankit board", type: "boolean" } )
 	.option( "addTag", { describe: "Update card with tag", type: "boolean" } )
 	.option( "pretty", { describe: "Print output in pretty columns", type: "boolean" } )
+	.option( "jsonify", { describe: "Print output in json structure", type: "boolean" } )
 	.default(defaultOptions)
 	.help()
 	.argv;
@@ -336,7 +337,7 @@ readConfigFile(leankitConfigFilename, function (data) {
 		    enhanceBoard(board);
 		    
 		    // Use command-line arg to determine what functions to call
-		    if (argv.printCards) {printBoardCards(board, argv.printOptions, argv.pretty);} 
+		    if (argv.printCards) {printBoardCards(board, argv.printOptions, argv.pretty, argv.jsonify);} 
 		    if (argv.printLanes) printLanes(board);
 		    if (argv.printRawCard) console.log(getCardById (board, argv.cardId));
 		    if (argv.printRawBoard) console.log(board);
