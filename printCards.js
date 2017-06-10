@@ -31,26 +31,26 @@ printCard = function (c, lineCount, printOptions) {
 	    printLine.ActivityDur=sprintf("%02d", c.activityDuration);
 	    break; }
 	case 'G': {
-	    printLine.Tags=sprintf("%-38s", c.Tags);
+	    printLine.Tags=sprintf("%s", c.Tags);
 	    break; }
 	case 'P': {
 	    // Points (or Size)
-	    printLine.Points=sprintf("%02d", c.Size);
+	    printLine.Points=sprintf("%d", c.Size);
 	    break; }
 	case 'Y': {
 	    printLine.TypeId=sprintf("%s", c.TypeId);
 	    break; }
 	case 'Z': {
-	    printLine.TypeName=sprintf("%-12s", c.TypeName);
+	    printLine.TypeName=sprintf("%s", c.TypeName);
 	    break; }
 	case 'T': {
-	    printLine.Title=sprintf("%-40s", c.Title.substr(0,39));
+	    printLine.Title=sprintf("%s", c.Title.substr(0,39));
 	    break; }
 	case 'X': {
-	    printLine.BoardTitle=sprintf("%-40s", c.boardTitle.substr(0,39));
+	    printLine.BoardTitle=sprintf("%s", c.boardTitle.substr(0,39));
 	    break; }
 	case 'W': {
-	    printLine.TitleLength=sprintf("%03d", c.Title.length);
+	    printLine.TitleLength=sprintf("%d", c.Title.length);
 	    break; }
 	case 'E': {
 	    // has Acceptance Criteria
@@ -75,7 +75,7 @@ printCard = function (c, lineCount, printOptions) {
 	    for (var k=0; k<c.AssignedUsers.length; k++) {
 		names = names.concat(",", c.AssignedUsers[k].FullName)  }
 	    names=names.replace(/^,/, "");
-	    printLine.Users=sprintf("%-30s", names.substr(0,29));;
+	    printLine.Users=sprintf("%s", names.substr(0,29));;
     	    break; }
 	default: {
 	    throw("Bad print option!!");
