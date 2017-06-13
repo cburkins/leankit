@@ -242,6 +242,7 @@ function getCommandLineArgs(defaultOptions) {
     printOptions = printOptions.concat("B: movedDuration\n");
     printOptions = printOptions.concat("C: movedDate\n");
     printOptions = printOptions.concat("D: Activity Duration\n");
+    printOptions = printOptions.concat("F: IsBlocked\n");
     printOptions = printOptions.concat("G: Tags\n");
     printOptions = printOptions.concat("P: Points (or Size)\n");
     printOptions = printOptions.concat("Y: Card Type ID\n");

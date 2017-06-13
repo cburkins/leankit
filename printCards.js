@@ -69,6 +69,9 @@ printCard = function (c, lineCount, printOptions) {
 	case 'V': {
 	    printLine.NumUsers = sprintf("%d", c.AssignedUsers.length);
 	    break; }
+	case 'F': {
+	    printLine.IsBlocked = sprintf("%s", c.IsBlocked);
+	    break; }
 	case 'U': {
 	    // Construct string containing "Assigned Users" for this card
 	    var names = "";
