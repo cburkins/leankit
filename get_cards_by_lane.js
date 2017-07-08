@@ -256,7 +256,7 @@ function getCommandLineArgs(defaultOptions) {
     printOptions = printOptions.concat("U: Assigned Users");
 
     var argv = require('yargs')
-	.usage('Usage: $0 options')
+	.usage('Usage: $0 options\n\n   Print all card IDs on a board:\n   node ./get_cards_by_lane.js --boardId 412731036 --printCards --printOptions I')
 	.demand(['password', 'accountName', 'email'])
     
 	.describe('accountName', 'URL to access board, for example https://<company-name>.leankit.com')

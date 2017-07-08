@@ -3,7 +3,7 @@ var columnify = require('columnify');
 
 // ---------------------------------------------------------------------------------------------
 
-printCard = function (c, lineCount, printOptions) {
+printCardRequestedFields = function (c, lineCount, printOptions) {
     // c: Leankit Card object
     // lineCount: integer that gets printed at beginning of output line
     // printOptions: string of capital letters that denotes which columns to print (e.g. ACDG)
@@ -14,6 +14,7 @@ printCard = function (c, lineCount, printOptions) {
 
     var printLine = new Object();
 
+    // else, only print the specific fields that the user requested
     for (var i=0; i<printOptions.length; i++) {
 
 	switch(printOptions[i]) {
@@ -24,14 +25,35 @@ printCard = function (c, lineCount, printOptions) {
 	    printLine.lastMoved = c.movedDuration;
 	    break; }
 	case 'C': {
-	    d = new Date(c.LastMove);
-	    printLine.lastMove = sprintf("%02d/%02d/%d", d.getMonth()+1, d.getDate(), d.getFullYear());
+	    // Chad, had to change this to lastMoveDay so it doesn't conflict with original variable lastMove
+	    printLine.lastMoveDay = c.lastMoveDay;
 	    break; }
 	case 'D': {
 	    printLine.ActivityDur=sprintf("%02d", c.activityDuration);
 	    break; }
+	case 'E': {
+	    // has Acceptance Criteria
+	    printLine.AC=sprintf("%s", c.hasAcceptCriteria);
+	    printLine.AC=c.hasAcceptCriteria;
+	    break; }
+	case 'F': {
+	    printLine.IsBlocked = sprintf("%s", c.IsBlocked);
+	    break; }
 	case 'G': {
 	    printLine.Tags=sprintf("%s", c.Tags);
+	    break; }
+	case 'H': {
+	    printLine.externalURLName=sprintf("%s", c.ExternalSystemName);
+	    printLine.externalURLLink=sprintf("%s", c.ExternalSystemUrl);
+	    break; }
+	case 'I': {
+	    printLine.CardID = sprintf("%s", c.Id);
+	    break; }
+	case 'L': {
+	    // Print 3 lanes
+	    printLine.Lane1=sprintf("%s", c.Lane1);
+	    printLine.Lane2=sprintf("%s", c.Lane2);
+	    printLine.Lane3=sprintf("%s", c.Lane3);
 	    break; }
 	case 'P': {
 	    // Points (or Size)
@@ -52,42 +74,44 @@ printCard = function (c, lineCount, printOptions) {
 	case 'W': {
 	    printLine.TitleLength=sprintf("%d", c.Title.length);
 	    break; }
-	case 'E': {
-	    // has Acceptance Criteria
-	    printLine.AC=sprintf("%s", c.hasAcceptCriteria);
-	    printLine.AC=c.hasAcceptCriteria;
-	    break; }
-	case 'L': {
-	    // Print 3 lanes
-	    printLine.Lane1=sprintf("%s", c.laneName[0]);
-	    printLine.Lane2=sprintf("%s", c.laneName[1]);
-	    printLine.Lane3=sprintf("%s", c.laneName[2]);
-	    break; }
-	case 'I': {
-	    printLine.CardID = sprintf("%s", c.Id);
-	    break; }
 	case 'V': {
 	    printLine.NumUsers = sprintf("%d", c.AssignedUsers.length);
 	    break; }
-	case 'F': {
-	    printLine.IsBlocked = sprintf("%s", c.IsBlocked);
-	    break; }
 	case 'U': {
-	    // Construct string containing "Assigned Users" for this card
-	    var names = "";
-	    for (var k=0; k<c.AssignedUsers.length; k++) {
-		names = names.concat(",", c.AssignedUsers[k].FullName)  }
-	    names=names.replace(/^,/, "");
-	    printLine.Users=sprintf("%s", names.substr(0,29));;
+	    printLine.Users=sprintf("%s", c.Users.substr(0,29));;
     	    break; }
 	default: {
 	    throw("Bad print option!!");
 	    break; }
 	}
     }
-    return (printLine);
 
-  
+    return (printLine);
+}
+
+
+// ---------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------
+
+printCardAllFields = function (c, lineCount, printOptions) {
+    // c: Leankit Card object
+    // lineCount: integer that gets printed at beginning of output line
+    // printOptions: string of capital letters that denotes which columns to print (e.g. ACDG)
+
+    var FS=" ";
+    var outputString="";
+
+    var printLine = new Object();
+
+
+    for (var key in c) {
+	if (c.hasOwnProperty(key)) {
+            printLine[key] = c[key];
+	}
+    }
+
+
+    return (printLine);
 }
 
 
@@ -110,8 +134,12 @@ module.exports.printCards = function (cards, printOptions, pretty, jsonOutput) {
 
     // Loop through all the cards, and get an output line for each
     for (var i = 0; i < cards.length; i++) {
-
-	printLine = printCard(cards[i], i+1, printOptions);
+	if (jsonOutput) {
+	    printLine = printCardAllFields(cards[i], i+1, printOptions);
+	}
+	else {
+	    printLine = printCardRequestedFields(cards[i], i+1, printOptions);
+	}	    
 
 	// Push the newly-created line into the array of output
 	printData.push(printLine);

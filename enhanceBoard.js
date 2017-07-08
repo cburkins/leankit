@@ -55,9 +55,23 @@ function enhanceCard (board, card) {
 
     // Add parent lane names to each card
     enhanceCardWithParentLanes (board, card);
-
+    card.Lane1=sprintf("%s", card.laneName[0]);
+    card.Lane2=sprintf("%s", card.laneName[1]);
+    card.Lane3=sprintf("%s", card.laneName[2]);
+    
     // Add board title to each card
     card.boardTitle = board.Title;
+    
+    // Construct string containing "Assigned Users" for this card
+    var users = "";
+    for (var k=0; k<card.AssignedUsers.length; k++) {
+	users = users.concat(",", card.AssignedUsers[k].FullName)  }
+    users=users.replace(/^,/, "");
+    card.Users = users;
+
+    d = new Date(card.LastMove);
+    card.lastMoveDay = sprintf("%02d/%02d/%d", d.getMonth()+1, d.getDate(), d.getFullYear());
+    
 }
 
 // ---------------------------------------------------------------------------------------------
