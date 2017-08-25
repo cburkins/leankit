@@ -2,6 +2,7 @@ var LeanKitClient = require( "leankit-client" );
 sprintf = require('sprintf-js').sprintf;
 printCards = require('./printCards.js').printCards;
 enhanceBoard = require('./enhanceBoard.js').enhanceBoard;
+enhanceCard = require('./enhanceBoard.js').enhanceCard;
 readConfigFile = require('./readConfig.js').readConfigFile;
 //var leankitConfigFilename = "./.leankit.config"
 // Add the CWD to the config file name, allows us to run from other dirs
@@ -319,16 +320,17 @@ readConfigFile(leankitConfigFilename, function (data) {
     var client = new LeanKitClient( accountName, email, password );
     
     if (argv.addTag) {
-	addTagToCard(boardId, client, argv.cardId, "Sprint 9");
-    }
-    
-    // Get the Main board
+       addTagToCard(boardId, client, argv.cardId, "Sprint 9");
+   }
+
+   // Call Leankit API to get the Main board
     client.getBoard( boardId, function( err, board ) {  
 	if ( err ) console.error("Error getting board:", err );
 	else {
 	    // Successfully retrieved board object from Leankit API
 	    
-	    // Get the Backlog Lanes
+	    // Call Leankti API to get the Backlog Lanes
+        // Seems that getBoard call doesn't provide backlog lanes, but this call does
 	    client.getBoardBacklogLanes( boardId, function (err, backlogLanes) {
 		if (err) console.error("Error getting backlog lanes:", err);
 		else {
@@ -336,17 +338,50 @@ readConfigFile(leankitConfigFilename, function (data) {
 		    
 		    // Add the backlog lanes to the board
 		    board.Lanes = board.Lanes.concat(backlogLanes);
+            var lanes = board.Lanes;
+
+            // Loop through Lanes 
+            cardAPICount = 0
+            for (var i = 0; i < lanes.length; i++) {
+              // Loop through cards in a lane
+              for (var j=0; j<lanes[i].Cards.length; j++) {            
+                  var card = lanes[i].Cards[j];              
+
+                  cardAPICount = cardAPICount + 1;
+                  client.getCard( board.Id, card.Id, (  function (card) {
+
+                    return (
+                        function (err, cardFromAPI) {
+                            if (err)  { console.error("Error getting card from API:", err) }
+                                else {
+                                    // Successfully got backlog lanes
+                                    // Add the backlog lanes to the board
+                                    enhanceCard(board, card, cardFromAPI);
+                                    // Decrement the count of API calls
+                                    cardAPICount = cardAPICount - 1;
+                                    // Check to see if last API call has returned
+                                    if (cardAPICount == 0) {
+                                        // Use command-line arg to determine what functions to call
+                                        if (argv.printCards) {printBoardCards(board, argv.printOptions, argv.pretty, argv.jsonify);} 
+                                        if (argv.printLanes) { printLanes(board); }
+                                        if (argv.printRawCard) { console.log(getCardById (board, argv.cardId)) };
+                                        if (argv.printRawBoard) { console.log(board); } 
+                                        if (argv.printStats) { printStats(board); }
+                                        if (argv.showMethods) { console.log(Object.getOwnPropertyNames(client)) } ;
+                                    }  // end of if (cardAPICount == 0)
+                                }  // end of else
+                            } ); // end of function & return      
+  }) (card) // end of function, end of enclosure 
+    ) // end of params for client.getGard
+    
+              } // end of loop for cards
+          } // end of loop for lanes
+
 		    
 		    // Add some useful data each card on the board 
-		    enhanceBoard(board);
+            //		    enhanceBoard(board, accountName, email, password);
 		    
-		    // Use command-line arg to determine what functions to call
-		    if (argv.printCards) {printBoardCards(board, argv.printOptions, argv.pretty, argv.jsonify);} 
-		    if (argv.printLanes) printLanes(board);
-		    if (argv.printRawCard) console.log(getCardById (board, argv.cardId));
-		    if (argv.printRawBoard) console.log(board);
-		    if (argv.printStats) printStats(board);
-		    if (argv.showMethods) console.log(Object.getOwnPropertyNames(client));
+
 		}
 	    });
 	}

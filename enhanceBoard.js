@@ -40,7 +40,7 @@ function enhanceCardWithParentLanes (board, c) {
 // ---------------------------------------------------------------------------------------------
 // Local
 
-function enhanceCard (board, card) {
+module.exports.enhanceCard = function  (board, card, cardFromAPI) {
 
     var moment = require("moment");
 
@@ -69,28 +69,31 @@ function enhanceCard (board, card) {
     users=users.replace(/^,/, "");
     card.Users = users;
 
-    d = new Date(card.LastMove);
+    // Add date (rather than date/time) for the day it was last moved
+    var d = new Date(card.LastMove);
     card.lastMoveDay = sprintf("%02d/%02d/%d", d.getMonth()+1, d.getDate(), d.getFullYear());
-    
+
+    // Chad, test adding a created date
+    var d = new Date(cardFromAPI.CreateDate);
+    card.created = sprintf("%02d/%02d/%d", d.getMonth()+1, d.getDate(), d.getFullYear());
+    //card.created = "08/01/2017"
+
 }
 
 // ---------------------------------------------------------------------------------------------
 // Exported
+    
+    module.exports.enhanceBoard = function (board, accountName, email, password) {
 
-module.exports.enhanceBoard = function (board) {
+        var lanes = board.Lanes;
 
-    var lanes = board.Lanes;
-
-    // Loop through Lanes and print all cards
-     for (var i = 0; i < lanes.length; i++) {
-	 // Loop through cards in a lane
-	 for (var j=0; j<lanes[i].Cards.length; j++) {
-
-	     var card = lanes[i].Cards[j];
-	     
-	     enhanceCard(board, card);
-
-	 }
-     }
-}
+        // Loop through Lanes 
+        for (var i = 0; i < lanes.length; i++) {
+          // Loop through cards in a lane
+          for (var j=0; j<lanes[i].Cards.length; j++) {            
+              var card = lanes[i].Cards[j];              
+              enhanceCard(board, card, accountName, email, password);
+          }
+      }
+  }
 
