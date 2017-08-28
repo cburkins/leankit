@@ -13,6 +13,7 @@ You'll need install Node.js.  The following directions assume a RedHat compatibl
 - curl --silent --location https://rpm.nodesource.com/setup_4.x | bash -
 - yum -y install nodejs
 
+
 ###Requirements: Node.js library requirements###
 
 The following Node.js libraries are required
@@ -21,6 +22,7 @@ The following Node.js libraries are required
 - prompt
 - optimist
 - sprintf-js
+- async (via " npm install --save async")
 
 You can install all of them with this simple command
 

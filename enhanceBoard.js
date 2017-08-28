@@ -1,4 +1,6 @@
 
+var async = require('async');
+
 
 // ---------------------------------------------------------------------------------------------
 // Local
@@ -81,19 +83,40 @@ module.exports.enhanceCard = function  (board, card, cardFromAPI) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Exported
-    
-    module.exports.enhanceBoard = function (board, accountName, email, password) {
 
-        var lanes = board.Lanes;
+module.exports.enhanceBoard = function(testBoard, leankitClient, parentCallback) {
+        var cardAPICount = 0;
+        var lanes = testBoard.Lanes;
 
-        // Loop through Lanes 
+        allCards = [];
+        console.log("Function 2.1");
+        // callback(null, 1,2)
         for (var i = 0; i < lanes.length; i++) {
-          // Loop through cards in a lane
-          for (var j=0; j<lanes[i].Cards.length; j++) {            
-              var card = lanes[i].Cards[j];              
-              enhanceCard(board, card, accountName, email, password);
-          }
-      }
-  }
+            // Loop through cards in a lane
+            for (var j = 0; j < lanes[i].Cards.length; j++) {
+                var card = lanes[i].Cards[j];
+                allCards.push(lanes[i].Cards[j]);
+                console.log(sprintf("%d %d  (%d %d)", i, j, testBoard.Id, card.Id))
+                console.log("Bye");
+            }
+        }
 
+        async.forEach(
+            allCards,
+            function(aCard, callback) {
+                console.log("calling...")
+                leankitClient.getCard(testBoard.Id, aCard.Id, function(err, cardFromAPI) {
+                    console.log(sprintf("got card: %d %d %d", testBoard.Id, aCard.Id, cardFromAPI.Id));
+                    enhanceCard(testBoard, aCard, cardFromAPI);
+                    callback();
+                });
+            },
+            function(err) {
+                console.log("all calls have finished 42");
+                parentCallback(null, "Done");
+            })
+    }
+
+// ---------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------

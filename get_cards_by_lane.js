@@ -1,8 +1,10 @@
+var async = require('async');
+
 var LeanKitClient = require( "leankit-client" );  
 sprintf = require('sprintf-js').sprintf;
 printCards = require('./printCards.js').printCards;
-enhanceBoard = require('./enhanceBoard.js').enhanceBoard;
 enhanceCard = require('./enhanceBoard.js').enhanceCard;
+enhanceBoard = require('./enhanceBoard.js').enhanceBoard;
 readConfigFile = require('./readConfig.js').readConfigFile;
 //var leankitConfigFilename = "./.leankit.config"
 // Add the CWD to the config file name, allows us to run from other dirs
@@ -294,7 +296,7 @@ function getCommandLineArgs(defaultOptions) {
 // ---------------------------------------------------------------------------------------------
 
 
-readConfigFile(leankitConfigFilename, function (data) {
+readConfigFile(leankitConfigFilename, function(data) {
 
     // Create an empty object where we can accumulate settings from the options file
     defaultOptions = {}
@@ -302,8 +304,8 @@ readConfigFile(leankitConfigFilename, function (data) {
     // Read through the key-value pairs from config file, and populate the settings object
     // This settings object will be used only if corresponding command-line args are not provided
     for (var key of data.keys()) {
-	// Push the key-value pair into a javascript object
-	defaultOptions[key] = data.get(key);
+        // Push the key-value pair into a javascript object
+        defaultOptions[key] = data.get(key);
     }
 
     // Get command-line args
@@ -311,81 +313,81 @@ readConfigFile(leankitConfigFilename, function (data) {
     argv = getCommandLineArgs(defaultOptions)
 
     // Give the given command-line args some sensible names
-    var accountName=argv.accountName;
-    var email=argv.email;
-    var password=argv.password;
-    var boardId=argv.boardId;
-    
+    var accountName = argv.accountName;
+    var email = argv.email;
+    var password = argv.password;
+    var boardId = argv.boardId;
+
     // Get a new object from the LeanKitClient API
-    var client = new LeanKitClient( accountName, email, password );
-    
+    var client = new LeanKitClient(accountName, email, password);
+
     if (argv.addTag) {
-       addTagToCard(boardId, client, argv.cardId, "Sprint 9");
-   }
+        addTagToCard(boardId, client, argv.cardId, "Sprint 9");
+    }
 
-   // Call Leankit API to get the Main board
-    client.getBoard( boardId, function( err, board ) {  
-	if ( err ) console.error("Error getting board:", err );
-	else {
-	    // Successfully retrieved board object from Leankit API
-	    
-	    // Call Leankti API to get the Backlog Lanes
-        // Seems that getBoard call doesn't provide backlog lanes, but this call does
-	    client.getBoardBacklogLanes( boardId, function (err, backlogLanes) {
-		if (err) console.error("Error getting backlog lanes:", err);
-		else {
-		    // Successfully got backlog lanes
-		    
-		    // Add the backlog lanes to the board
-		    board.Lanes = board.Lanes.concat(backlogLanes);
-            var lanes = board.Lanes;
+    // Global variable to keep track of the board
+    testBoard = null;
 
-            // Loop through Lanes 
-            cardAPICount = 0
-            for (var i = 0; i < lanes.length; i++) {
-              // Loop through cards in a lane
-              for (var j=0; j<lanes[i].Cards.length; j++) {            
-                  var card = lanes[i].Cards[j];              
+    // Two args
+    // (1) tasks(Array) : An array of async functions to run. Each function should complete with any number of result values. 
+    //                    The result values will be passed as arguments, in order, to the next task.
+    // (2) callback function <opt> : An optional callback to run once all the functions have completed. 
+    //                 This will be passed the results of the last task's callback. Invoked with (err, [results]).
+    // At the end of each function, you call "callback()" to trigger the waterfall cascade
+    //
+    // if any function encourters error, it short-circuits the waterfall, and calls that last optional callback with err
+    // For the intermediate callbacks, the 1st param is the error, if any
+    async.waterfall([
+            function(callback) {
+                console.log("Function 1");
+                client.getBoard(boardId, callback)
+                    // callback(null, 1,2)
+            },
+            function(board, callback) {
+                console.log("Function 2");
+                // we've got the board now
+                // try to print the number of lans
+                console.log("F2: Number of Lanes: " + board.Lanes.length)
+                testBoard = board;
+                client.getBoardBacklogLanes(boardId, callback)
+            },
+            function(backlogLanes, callback) {
+                try {
+                    console.log("Function 3");
+                    // we've got the board now
+                    // try to print the number of lans
+                    console.log("F3: Number of  Normal Lanes: " + testBoard.Lanes.length)
+                    console.log("F3: Number of Backlog Lanes: " + backlogLanes.length)
+                    // Add the backlog lanes to the board
+                    testBoard.Lanes = testBoard.Lanes.concat(backlogLanes);
+                    console.log("F3: Total number of Lanes: " + testBoard.Lanes.length)
 
-                  cardAPICount = cardAPICount + 1;
-                  client.getCard( board.Id, card.Id, (  function (card) {
+                    // enchance the cards, then cascade to the next function in the waterfall
+                    enhanceBoard(testBoard, client, callback);
 
-                    return (
-                        function (err, cardFromAPI) {
-                            if (err)  { console.error("Error getting card from API:", err) }
-                                else {
-                                    // Successfully got backlog lanes
-                                    // Add the backlog lanes to the board
-                                    enhanceCard(board, card, cardFromAPI);
-                                    // Decrement the count of API calls
-                                    cardAPICount = cardAPICount - 1;
-                                    // Check to see if last API call has returned
-                                    if (cardAPICount == 0) {
-                                        // Use command-line arg to determine what functions to call
-                                        if (argv.printCards) {printBoardCards(board, argv.printOptions, argv.pretty, argv.jsonify);} 
-                                        if (argv.printLanes) { printLanes(board); }
-                                        if (argv.printRawCard) { console.log(getCardById (board, argv.cardId)) };
-                                        if (argv.printRawBoard) { console.log(board); } 
-                                        if (argv.printStats) { printStats(board); }
-                                        if (argv.showMethods) { console.log(Object.getOwnPropertyNames(client)) } ;
-                                    }  // end of if (cardAPICount == 0)
-                                }  // end of else
-                            } ); // end of function & return      
-  }) (card) // end of function, end of enclosure 
-    ) // end of params for client.getGard
-    
-              } // end of loop for cards
-          } // end of loop for lanes
-
-		    
-		    // Add some useful data each card on the board 
-            //		    enhanceBoard(board, accountName, email, password);
-		    
-
-		}
-	    });
-	}
-    });
+                } catch (err) {
+                    callback("Error in Function 3: " + err, "Done");
+                }
+            },
+            function(arg1, callback) {
+                // Function 4
+                try {
+                    console.log("Whoa");
+                    if (argv.printCards) {printBoardCards(testBoard, argv.printOptions, argv.pretty, argv.jsonify);} 
+                    if (argv.printLanes) { printLanes(testBboard); }
+                    if (argv.printRawCard) { console.log(getCardById(testBoard, argv.cardId)) };
+                    if (argv.printRawBoard) { console.log(testBoard); } 
+                    if (argv.printStats) { printStats(testBoard); }
+                    if (argv.showMethods) { console.log(Object.getOwnPropertyNames(client)) } ;
+                } catch (err) {
+                    callback("Error in Function 4: " + err, "Done");
+                }
+            },
+        ],
+        // Final callback
+        function(err, result) {
+            console.log(err, result);
+        });
 
 });
 
