@@ -84,35 +84,37 @@ module.exports.enhanceCard = function  (board, card, cardFromAPI) {
 
 // ---------------------------------------------------------------------------------------------
 
-module.exports.enhanceBoard = function(testBoard, leankitClient, parentCallback) {
+module.exports.enhanceBoard = function(theBoard, leankitClient, parentCallback) {
         var cardAPICount = 0;
-        var lanes = testBoard.Lanes;
+        var lanes = theBoard.Lanes;
 
+        // Build a one-dimensional array of all the cards (which is currently in two dimensional array)
         allCards = [];
-        console.log("Function 2.1");
-        // callback(null, 1,2)
-        for (var i = 0; i < lanes.length; i++) {
+        for (var laneNumber = 0; laneNumber < lanes.length; laneNumber++) {
             // Loop through cards in a lane
-            for (var j = 0; j < lanes[i].Cards.length; j++) {
-                var card = lanes[i].Cards[j];
-                allCards.push(lanes[i].Cards[j]);
-                console.log(sprintf("%d %d  (%d %d)", i, j, testBoard.Id, card.Id))
-                console.log("Bye");
+            for (var j = 0; j < lanes[laneNumber].Cards.length; j++) {
+                var card = lanes[laneNumber].Cards[j];
+                allCards.push(lanes[laneNumber].Cards[j]);
             }
         }
 
+        // Arg1: the array to loop through
+        // Arg2: the async function to run for each member of array (these all run concurrently)
+        // Arg3: the function to call when *all* async functions retrun
         async.forEach(
             allCards,
-            function(aCard, callback) {
-                console.log("calling...")
-                leankitClient.getCard(testBoard.Id, aCard.Id, function(err, cardFromAPI) {
-                    console.log(sprintf("got card: %d %d %d", testBoard.Id, aCard.Id, cardFromAPI.Id));
-                    enhanceCard(testBoard, aCard, cardFromAPI);
+            function(singleCard, callback) {
+                // async lib passes us a callback, which we need to call when we're done
+                leankitClient.getCard(theBoard.Id, singleCard.Id, function(err, cardFromAPI) {
+                    // this anonymous function is called when async getCard gives us a card
+                    vprint(sprintf("   got a card (ID = %s)", cardFromAPI.Id))
+                    enhanceCard(theBoard, singleCard, cardFromAPI);
+                    // 
                     callback();
                 });
             },
             function(err) {
-                console.log("all calls have finished 42");
+                vprint ("All API calls (to get cards) have finished");
                 parentCallback(null, "Done");
             })
     }

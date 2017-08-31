@@ -18,11 +18,16 @@ You'll need install Node.js.  The following directions assume a RedHat compatibl
 
 The following Node.js libraries are required
 
-- leankit-client
-- prompt
-- optimist
-- sprintf-js
 - async (via " npm install --save async")
+- columnify
+- config-ini-parser
+- leankit-client
+- moment
+- optimist
+- prompt
+- sprintf-js
+- synchronize
+- yargs
 
 You can install all of them with this simple command
 
@@ -32,8 +37,17 @@ For example
 
 - npm install leankit-client
 
+To install all needed modules
 
+- npm install async columnify config-ini-parser leankit-client moment
+- npm install optimist prompt sprintf-js synchronize yargs
 
+###Running the API by hand###
+
+To get boardId: simply copy from the end of the URL for the board
+To get the cardId: Put your board into API mode (via settings), then easily copy cardId by clicking on it
+
+- node ./get_cards_by_lane.js --boardId 372745411 --cardId 531430446 --printRawCard
 
 
 
