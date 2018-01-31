@@ -88,7 +88,7 @@ module.exports.enhanceBoard = function(theBoard, leankitClient, parentCallback) 
         var cardAPICount = 0;
         var lanes = theBoard.Lanes;
 
-        // Build a one-dimensional array of all the cards (which is currently in two dimensional array)
+        // Convert the cards from a 2-dimensional array to 1-dimensional array
         allCards = [];
         for (var laneNumber = 0; laneNumber < lanes.length; laneNumber++) {
             // Loop through cards in a lane
@@ -98,6 +98,7 @@ module.exports.enhanceBoard = function(theBoard, leankitClient, parentCallback) 
             }
         }
 
+        // async.forEach takes three arguments
         // Arg1: the array to loop through
         // Arg2: the async function to run for each member of array (these all run concurrently)
         // Arg3: the function to call when *all* async functions retrun
@@ -107,7 +108,7 @@ module.exports.enhanceBoard = function(theBoard, leankitClient, parentCallback) 
                 // async lib passes us a callback, which we need to call when we're done
                 leankitClient.getCard(theBoard.Id, singleCard.Id, function(err, cardFromAPI) {
                     // this anonymous function is called when async getCard gives us a card
-                    vprint(sprintf("   got a card (ID = %s)", cardFromAPI.Id))
+                    //vprint(sprintf("   got a card (ID = %s)", cardFromAPI.Id))
                     enhanceCard(theBoard, singleCard, cardFromAPI);
                     // 
                     callback();

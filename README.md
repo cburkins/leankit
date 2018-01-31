@@ -47,7 +47,8 @@ To install all needed modules
 To get boardId: simply copy from the end of the URL for the board
 To get the cardId: Put your board into API mode (via settings), then easily copy cardId by clicking on it
 
-- node ./get_cards_by_lane.js --boardId 372745411 --cardId 531430446 --printRawCard
+- node ./get_cards_by_lane.js --boardId 412731036 --printRawCard
+- node ./get_cards_by_lane.js --boardId 412731036 --cardId 531430446 --printRawCard
 
 
 
