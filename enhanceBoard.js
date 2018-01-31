@@ -42,7 +42,7 @@ function enhanceCardWithParentLanes (board, c) {
 // ---------------------------------------------------------------------------------------------
 // Local
 
-module.exports.enhanceCard = function  (board, card, cardFromAPI) {
+module.exports.enhanceCard = function  (board, card, cardDetailed, cardComments) {
 
     var moment = require("moment");
 
@@ -76,10 +76,12 @@ module.exports.enhanceCard = function  (board, card, cardFromAPI) {
     card.lastMoveDay = sprintf("%02d/%02d/%d", d.getMonth()+1, d.getDate(), d.getFullYear());
 
     // Chad, test adding a created date
-    var d = new Date(cardFromAPI.CreateDate);
+    var d = new Date(cardDetailed.CreateDate);
     card.created = sprintf("%02d/%02d/%d", d.getMonth()+1, d.getDate(), d.getFullYear());
     //card.created = "08/01/2017"
 
+    // Add card comments
+    card.allComments = cardComments
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -106,12 +108,19 @@ module.exports.enhanceBoard = function(theBoard, leankitClient, parentCallback) 
             allCards,
             function(singleCard, callback) {
                 // async lib passes us a callback, which we need to call when we're done
-                leankitClient.getCard(theBoard.Id, singleCard.Id, function(err, cardFromAPI) {
+                leankitClient.getCard(theBoard.Id, singleCard.Id, function(err, singleCardDetailed) {
                     // this anonymous function is called when async getCard gives us a card
-                    //vprint(sprintf("   got a card (ID = %s)", cardFromAPI.Id))
-                    enhanceCard(theBoard, singleCard, cardFromAPI);
-                    // 
-                    callback();
+
+                    leankitClient.getComments(theBoard.Id, singleCard.Id, function (err, commentsFromAPI) {
+                        // second API call (to get gomments) is now finished
+
+                        // Now that we have two key pieces (detailedCard and Comments), add those to the card
+                        enhanceCard(theBoard, singleCard, singleCardDetailed, commentsFromAPI);
+
+                        // Signal async library that this card is complete.
+                        // Once ALL cards are complete, the function below gets called
+                        callback();
+                    });
                 });
             },
             function(err) {
