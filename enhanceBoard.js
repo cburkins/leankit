@@ -71,14 +71,13 @@ module.exports.enhanceCard = function  (board, card, cardDetailed, cardComments)
     users=users.replace(/^,/, "");
     card.Users = users;
 
-    // Add date (rather than date/time) for the day it was last moved
+    // LastMoved: Add date (rather than date/time) for the day it was last moved
     var d = new Date(card.LastMove);
     card.lastMoveDay = sprintf("%02d/%02d/%d", d.getMonth()+1, d.getDate(), d.getFullYear());
 
-    // Chad, test adding a created date
+    // Created: Add date (rather than date/time) for the day it was last moved
     var d = new Date(cardDetailed.CreateDate);
     card.created = sprintf("%02d/%02d/%d", d.getMonth()+1, d.getDate(), d.getFullYear());
-    //card.created = "08/01/2017"
 
     // Add card comments
     card.allComments = cardComments
