@@ -1,0 +1,35 @@
+{
+  "name": "leankit",
+  "version": "1.0.0",
+  "description": "leankit client using node.js",
+  "main": "get_cards_by_lane.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "async": "^2.5.0",
+    "columnify": "^1.5.4",
+    "config-ini-parser": "^1.1.6",
+    "leankit-client": "^1.1.2",
+    "moment": "^2.15.1",
+    "sprintf-js": "^1.0.3",
+    "yargs": "^6.3.0",
+    "optimist": "^0.6.1",
+    "prompt": "^1.0.0",
+    "synchronize": "^2.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://cburkins@github.com/cburkins/leankit.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cburkins/leankit/issues"
+  },
+  "homepage": "https://github.com/cburkins/leankit#readme"
+}

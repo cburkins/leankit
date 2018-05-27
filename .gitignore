@@ -1,2 +1,4 @@
 # Ignore any file ending with .config
 *.config
+node_modules
+\#*
