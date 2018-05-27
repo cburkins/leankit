@@ -107,9 +107,13 @@ module.exports.enhanceBoard = function(theBoard, leankitClient, parentCallback) 
             allCards,
             function(singleCard, callback) {
                 // async lib passes us a callback, which we need to call when we're done
+                // Actually calls /kanban/api/board/${boardId}/getcard/${cardId}
+                // New method to call legacy v1: .v1.card.get( boardId, cardId )
                 leankitClient.getCard(theBoard.Id, singleCard.Id, function(err, singleCardDetailed) {
                     // this anonymous function is called when async getCard gives us a card
 
+                    // Actually cals /kanban/api/card/getcomments/${boardId}/${cardId}
+                    // New method to call legacy v1: .v1.card.comment.list( boardId, cardId )
                     leankitClient.getComments(theBoard.Id, singleCard.Id, function (err, commentsFromAPI) {
                         // second API call (to get gomments) is now finished
 

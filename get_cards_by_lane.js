@@ -333,30 +333,35 @@ async.waterfall([
         },
 
         function(callback) {
-            vprint("Async Function 1 - Get Board");
+            vprint("Async Function 1 - Get Board (v1)");
             // We're given a "callback" function (it's passed to us).   When we're done, we're supposed to call that
             //   so async can proceed to the next (waterfall) function.  Instead, we pass this "callback" function to
             //   our leankit leankitClient call. He'll then call the "callback" function for us when data is returned
+
+            // Actually calls endpont /kanban/api/boards/<boardId>
+            // New method to call legacy v1: .v1.board.get( boardId )
             leankitClient.getBoard(boardId, callback)
                 // NOTE: alternative is (if we didn't have our asynchronous function to call) is we could have called our
                 //    callback function manually.   For example, "callback(null, 1,2)"    First arg is the error code, and
                 //    would typically be "null" when we simply want to proceed with next function
         },
         function(board, callback) {
-            vprint("Async Function 2 - Get Backlog Lanes");
+            vprint("Async Function 2 - Get Backlog Lanes (v1)");
             // we've got the board now
             theBoard = board;
             // pass along the "callback" function provided to us, so getBoardBacklog can trigger end of this waterfall step
+            // Actually calls /kanban/api/board/<boardId>/backlog
+            // New method to call legacy v1: .v1.board.backlog( boardId )
             leankitClient.getBoardBacklogLanes(boardId, callback)
         },
         function(backlogLanes, callback) {
             try {
                 // we've got the board now
-                vprint("Async Function 3 - join lanes and call enhanceBoard");
-
+                vprint("Async Function 3a - join lanes");
                 // Add the backlog lanes to the board
                 theBoard.Lanes = theBoard.Lanes.concat(backlogLanes);
 
+                vprint("Async Function 3b - call enhanceBoard");
                 // enchance the cards, then cascade to the next function in the waterfall
                 enhanceBoard(theBoard, leankitClient, callback);
 
@@ -373,7 +378,7 @@ async.waterfall([
                 if (argv.printRawCard) { console.log(getCardById(theBoard, argv.cardId)) };
                 if (argv.printRawBoard) { console.log(theBoard); }
                 if (argv.printStats) { printStats(theBoard); }
-                if (argv.showMethods) { console.log(Object.getOwnPropertyNames(client)) };
+                if (argv.showMethods) { console.log(Object.getOwnPropertyNames(leankitClient)) };
             } catch (err) {
                 callback("Error in Async Function 4: " + err, "Done");
             }
