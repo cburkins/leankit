@@ -16,6 +16,7 @@ const LeanKitClient = require("leankit-client");
 sprintf = require('sprintf-js').sprintf;
 printCards = require('./printCards.js').printCards;
 enhanceCard = require('./enhanceBoard.js').enhanceCard;
+enhanceBoardPromise = require('./enhanceBoard.js').enhanceBoardPromise;
 enhanceBoard = require('./enhanceBoard.js').enhanceBoard;
 readConfigFile = require('./readConfig.js').readConfigFile;
 //var leankitConfigFilename = "./.leankit.config"
@@ -353,8 +354,27 @@ async.waterfall([
             // Actually calls endpont /kanban/api/boards/<boardId>
             // New method to call legacy v1: .v1.board.get( boardId )
             // leankitClient.getBoard(boardId, callback)
-            leankitClient.v1.board.get(boardId, callback).then( res => {
-                console.log(res.data);
+            leankitClient.v1.board.get(boardId, callback).then( boardResult => {
+                // res.data is the same as "board" in previous version of leankit client
+                theBoard = boardResult.data
+                vprint("Async Function 2 - Get Backlog Lanes (v1)");
+                return leankitClient.v1.board.backlog( boardId );
+            }).then ( backlogResults => {
+                backlogLanes = backlogResults.data
+
+                // we've got the board and backlog lanes now
+                vprint("Async Function 3a - join lanes");
+                // Add the backlog lanes to the board
+                theBoard.Lanes = theBoard.Lanes.concat(backlogLanes);
+
+                vprint("Async Function 3b - call enhanceBoard");
+                // enchance the cards, then cascade to the next function in the waterfall
+
+                return enhanceBoardPromise(theBoard, leankitClient);
+            }).then ( enhancedBoardResults => {
+                vprint("enhanceBoard has returned")
+                printBoardCards(theBoard, argv.printOptions, argv.pretty, argv.jsonify);
+                process.exit();
             })
             // NOTE: alternative is (if we didn't have our asynchronous function to call) is we could have called our
             //    callback function manually.   For example, "callback(null, 1,2)"    First arg is the error code, and
