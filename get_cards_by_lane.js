@@ -7,9 +7,11 @@ global.vprint = function(message) {
     // ---------------------------------------------------------------------------------------------
 
 
-var async = require('async');
+const async = require('async');
 
-var LeanKitClient = require("leankit-client");
+// const LeanKitClient = require("leankit-client");
+const LeanKitClient = require( "leankit-client" );
+process.exit();
 sprintf = require('sprintf-js').sprintf;
 printCards = require('./printCards.js').printCards;
 enhanceCard = require('./enhanceBoard.js').enhanceCard;

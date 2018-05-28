@@ -10,7 +10,7 @@
     "async": "^2.5.0",
     "columnify": "^1.5.4",
     "config-ini-parser": "^1.1.6",
-    "leankit-client": "^1.1.2",
+    "leankit-client": "^2.0.0",
     "moment": "^2.15.1",
     "sprintf-js": "^1.0.3",
     "yargs": "^6.3.0",
