@@ -354,12 +354,12 @@ async.waterfall([
             // Actually calls endpont /kanban/api/boards/<boardId>
             // New method to call legacy v1: .v1.board.get( boardId )
             // leankitClient.getBoard(boardId, callback)
-            leankitClient.v1.board.get(boardId, callback).then( boardResult => {
+            leankitClient.v1.board.get(boardId, callback).then(boardResult => {
                 // res.data is the same as "board" in previous version of leankit client
                 theBoard = boardResult.data
                 vprint("Async Function 2 - Get Backlog Lanes (v1)");
-                return leankitClient.v1.board.backlog( boardId );
-            }).then ( backlogResults => {
+                return leankitClient.v1.board.backlog(boardId);
+            }).then(backlogResults => {
                 backlogLanes = backlogResults.data
 
                 // we've got the board and backlog lanes now
@@ -371,9 +371,20 @@ async.waterfall([
                 // enchance the cards, then cascade to the next function in the waterfall
 
                 return enhanceBoardPromise(theBoard, leankitClient);
-            }).then ( enhancedBoardResults => {
+            }).then(enhancedBoardResults => {
                 vprint("enhanceBoard has returned")
-                printBoardCards(theBoard, argv.printOptions, argv.pretty, argv.jsonify);
+                // Function 4
+                try {
+                    vprint("Async Final Function - Print requested data")
+                    if (argv.printCards) { printBoardCards(theBoard, argv.printOptions, argv.pretty, argv.jsonify); }
+                    if (argv.printLanes) { printLanes(theBoard); }
+                    if (argv.printRawCard) { console.log(getCardById(theBoard, argv.cardId)) };
+                    if (argv.printRawBoard) { console.log(theBoard); }
+                    if (argv.printStats) { printStats(theBoard); }
+                    if (argv.showMethods) { console.log(Object.getOwnPropertyNames(leankitClient)) };
+                } catch (err) {
+                    callback("Error in Async Function 4: " + err, "Done");
+                }
                 process.exit();
             })
             // NOTE: alternative is (if we didn't have our asynchronous function to call) is we could have called our

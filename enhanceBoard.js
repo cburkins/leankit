@@ -104,8 +104,6 @@ module.exports.enhanceBoardPromise = function(theBoard, leankitClient) {
         }
     }
 
-    allCards = allCards.slice(0, 4);
-
     // Create an array of promises, one for each card
     var cardPromises = [];
     for (let singleCard of allCards) {
