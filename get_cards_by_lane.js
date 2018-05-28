@@ -3,15 +3,16 @@ global.verbose = false;
 // ---------------------------------------------------------------------------------------------
 // this might be naughty, but I'm defining a global function so I can use it for debugging in all functions
 global.vprint = function(message) {
-        if (verbose) console.log(message); }
-    // ---------------------------------------------------------------------------------------------
+    if (verbose) console.log(message);
+}
+// ---------------------------------------------------------------------------------------------
 
 
-const async = require('async');
+var async = require('async');
 
 // const LeanKitClient = require("leankit-client");
-const LeanKitClient = require( "leankit-client" );
-process.exit();
+const LeanKitClient = require("leankit-client");
+//process.exit();
 sprintf = require('sprintf-js').sprintf;
 printCards = require('./printCards.js').printCards;
 enhanceCard = require('./enhanceBoard.js').enhanceCard;
@@ -79,7 +80,8 @@ function printStatsAnalysis(subsetCards, outputString) {
     totalDays = 0;
     worstXAct = 5
     subsetCards.sort(function(a, b) {
-        return b.activityDuration - a.activityDuration });
+        return b.activityDuration - a.activityDuration
+    });
     for (i = 0; i < worstXAct; i++) {
         totalDays += subsetCards[i].activityDuration;
     }
@@ -89,7 +91,8 @@ function printStatsAnalysis(subsetCards, outputString) {
     totalDays = 0;
     worstXMoved = 12
     subsetCards.sort(function(a, b) {
-        return b.movedDuration - a.movedDuration });
+        return b.movedDuration - a.movedDuration
+    });
     for (i = 0; i < worstXMoved; i++) { totalDays += subsetCards[i].movedDuration; }
     averageDaysSinnerInLane = totalDays / worstXMoved;
 
@@ -250,7 +253,7 @@ function getCommandLineArgs(defaultOptions) {
         .usage('Usage: $0 options\n\n   Print all card IDs on a board:\n   node ./get_cards_by_lane.js --boardId 412731036 --printCards --printOptions I')
         .demand(['password', 'accountName', 'email'])
 
-    .describe('accountName', 'URL to access board, for example https://<company-name>.leankit.com')
+        .describe('accountName', 'URL to access board, for example https://<company-name>.leankit.com')
         .describe('password', 'Non-SSO password')
         .describe('email', 'Email address used to login')
         .describe('boardId', '9-digit number that id\'s a specific board')
@@ -288,7 +291,7 @@ function getCommandLineArgs(defaultOptions) {
 theBoard = null;
 
 var leankitClient = null;
-var boardId = null; 
+var boardId = null;
 
 // Create an empty object where we can accumulate settings from the options file
 defaultOptions = {}
@@ -324,8 +327,15 @@ async.waterfall([
                 boardId = argv.boardId;
                 verbose = argv.verbose;
 
+                const auth = {
+                    account: accountName, // change these properties to match your account
+                    email: email, // for token auth, see below
+                    password: password
+                };
+
                 // Get a new object from the LeanKitClient API
-                leankitClient = new LeanKitClient(accountName, email, password);
+                // leankitClient = new LeanKitClient(accountName, email, password);
+                leankitClient = LeanKitClient(auth);
 
                 // Experiment to see if we can update (write) to a card
                 if (argv.addTag) { addTagToCard(boardId, leankitClient, argv.cardId, "Sprint 9"); }
@@ -342,10 +352,13 @@ async.waterfall([
 
             // Actually calls endpont /kanban/api/boards/<boardId>
             // New method to call legacy v1: .v1.board.get( boardId )
-            leankitClient.getBoard(boardId, callback)
-                // NOTE: alternative is (if we didn't have our asynchronous function to call) is we could have called our
-                //    callback function manually.   For example, "callback(null, 1,2)"    First arg is the error code, and
-                //    would typically be "null" when we simply want to proceed with next function
+            // leankitClient.getBoard(boardId, callback)
+            leankitClient.v1.board.get(boardId, callback).then( res => {
+                console.log(res.data);
+            })
+            // NOTE: alternative is (if we didn't have our asynchronous function to call) is we could have called our
+            //    callback function manually.   For example, "callback(null, 1,2)"    First arg is the error code, and
+            //    would typically be "null" when we simply want to proceed with next function
         },
         function(board, callback) {
             vprint("Async Function 2 - Get Backlog Lanes (v1)");
