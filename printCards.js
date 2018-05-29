@@ -49,6 +49,9 @@ printCardRequestedFields = function (c, lineCount, printOptions) {
 	case 'I': {
 	    printLine.CardID = sprintf("%s", c.Id);
 	    break; }
+	case 'K': {
+	    printLine.created = sprintf("%s", c.created);
+	    break; }
 	case 'L': {
 	    // Print 3 lanes
 	    printLine.Lane1=sprintf("%s", c.Lane1);

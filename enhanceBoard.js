@@ -41,7 +41,7 @@ function enhanceCardWithParentLanes(board, c) {
 // ---------------------------------------------------------------------------------------------
 // Local
 
-module.exports.enhanceCard = function(board, card, cardDetailed, cardComments) {
+enhanceCard = function(board, card) {
 
     var moment = require("moment");
 
@@ -75,21 +75,29 @@ module.exports.enhanceCard = function(board, card, cardDetailed, cardComments) {
     var d = new Date(card.LastMove);
     card.lastMoveDay = sprintf("%02d/%02d/%d", d.getMonth() + 1, d.getDate(), d.getFullYear());
 
-    // Created: Add date (rather than date/time) for the day it was last moved
-    var d = new Date(cardDetailed.CreateDate);
-    card.created = sprintf("%02d/%02d/%d", d.getMonth() + 1, d.getDate(), d.getFullYear());
-
-    // Add card comments
-    card.allComments = cardComments
-
     return card;
 }
 
 // ---------------------------------------------------------------------------------------------
 
-module.exports.enhanceBoardPromise = function(theBoard, leankitClient) {
+enhanceCardAddDetail = function(card, cardDetailed) {
+    // Created: Add date (rather than date/time) for the day it was created
+    var d = new Date(cardDetailed.CreateDate);
+    card.created = sprintf("%02d/%02d/%d", d.getMonth() + 1, d.getDate(), d.getFullYear());
+    return card;   
+}
 
-    console.log("inside enhanceBoardPromise")
+// ---------------------------------------------------------------------------------------------
+
+enhanceCardAddComments = function(card, cardComments) {
+    // Add card comments
+    card.allComments = cardComments
+    return card;
+}
+
+// ---------------------------------------------------------------------------------------------
+
+module.exports.enhanceBoard = function(theBoard, leankitClient) {
 
     var cardAPICount = 0;
     var lanes = theBoard.Lanes;
@@ -111,14 +119,14 @@ module.exports.enhanceBoardPromise = function(theBoard, leankitClient) {
             // Get a single card
             leankitClient.v1.card.get(theBoard.Id, singleCard.Id).then(singleCardDetailedResult => {
                 var singleCardDetailed = singleCardDetailedResult.data;
-                console.log("Card call returned: \n   " + singleCardDetailed.Title + "\n   " + singleCard.Title);
 
                 leankitClient.v1.card.comment.list(theBoard.Id, singleCard.Id).then(commentsFromAPIResult => {
                     // second API call (to get gomments) is now finished
                     var commentsFromAPI = commentsFromAPIResult.data;
                     // Now that we have two key pieces (detailedCard and Comments), add those to the card
-                    // singleCard = enhanceCard(theBoard, singleCard, singleCardDetailed, commentsFromAPI);
-                    console.log("Single card title: " + singleCard.Title);
+                    singleCard = enhanceCard(theBoard, singleCard);
+                    singleCard = enhanceCardAddDetail(singleCard, singleCardDetailed);
+                    singleCard = enhanceCardAddComments(singleCard, commentsFromAPI);
                     resolve(singleCard);
                 })
             })
@@ -126,63 +134,14 @@ module.exports.enhanceBoardPromise = function(theBoard, leankitClient) {
         cardPromises.push(promise);
     }
 
-
     var promiseAll = Promise.all(cardPromises).then(returnedValues => {
-        for (card of returnedValues) {
-            console.log(card.Title);
-        }
+        // Promise.all returns when ALL of it's promises return
+
+        // returnedValues is an array of all the return values from all the promises
+        // In our case, we're going to use a reference to the global theBoard, probably should use a retrun value instead, oh well
     })
 
     return promiseAll;
-}
-
-// ---------------------------------------------------------------------------------------------
-
-module.exports.enhanceBoard = function(theBoard, leankitClient, parentCallback) {
-    var cardAPICount = 0;
-    var lanes = theBoard.Lanes;
-
-    // Convert the cards from a 2-dimensional array to 1-dimensional array
-    allCards = [];
-    for (var laneNumber = 0; laneNumber < lanes.length; laneNumber++) {
-        // Loop through cards in a lane
-        for (var j = 0; j < lanes[laneNumber].Cards.length; j++) {
-            var card = lanes[laneNumber].Cards[j];
-            allCards.push(lanes[laneNumber].Cards[j]);
-        }
-    }
-
-    // async.forEach takes three arguments
-    // Arg1: the array to loop through
-    // Arg2: the async function to run for each member of array (these all run concurrently)
-    // Arg3: the function to call when *all* async functions retrun
-    async.forEach(
-        allCards,
-        function(singleCard, callback) {
-            // async lib passes us a callback, which we need to call when we're done
-            // Actually calls /kanban/api/board/${boardId}/getcard/${cardId}
-            // New method to call legacy v1: .v1.card.get( boardId, cardId )
-            leankitClient.getCard(theBoard.Id, singleCard.Id, function(err, singleCardDetailed) {
-                // this anonymous function is called when async getCard gives us a card
-
-                // Actually calls /kanban/api/card/getcomments/${boardId}/${cardId}
-                // New method to call legacy v1: .v1.card.comment.list( boardId, cardId )
-                leankitClient.getComments(theBoard.Id, singleCard.Id, function(err, commentsFromAPI) {
-                    // second API call (to get gomments) is now finished
-
-                    // Now that we have two key pieces (detailedCard and Comments), add those to the card
-                    enhanceCard(theBoard, singleCard, singleCardDetailed, commentsFromAPI);
-
-                    // Signal async library that this card is complete.
-                    // Once ALL cards are complete, the function below gets called
-                    callback();
-                });
-            });
-        },
-        function(err) {
-            vprint("All API calls (to get cards) have finished");
-            parentCallback(null, "Done");
-        })
 }
 
 // ---------------------------------------------------------------------------------------------

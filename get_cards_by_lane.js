@@ -15,8 +15,6 @@ const LeanKitClient = require("leankit-client");
 //process.exit();
 sprintf = require('sprintf-js').sprintf;
 printCards = require('./printCards.js').printCards;
-enhanceCard = require('./enhanceBoard.js').enhanceCard;
-enhanceBoardPromise = require('./enhanceBoard.js').enhanceBoardPromise;
 enhanceBoard = require('./enhanceBoard.js').enhanceBoard;
 readConfigFile = require('./readConfig.js').readConfigFile;
 //var leankitConfigFilename = "./.leankit.config"
@@ -239,6 +237,7 @@ function getCommandLineArgs(defaultOptions) {
     printOptions = printOptions.concat("D: Activity Duration\n");
     printOptions = printOptions.concat("F: IsBlocked\n");
     printOptions = printOptions.concat("G: Tags\n");
+    printOptions = printOptions.concat("K: Dated Created\n");
     printOptions = printOptions.concat("P: Points (or Size)\n");
     printOptions = printOptions.concat("Y: Card Type ID\n");
     printOptions = printOptions.concat("Z: Card Type Name\n");
@@ -306,134 +305,81 @@ defaultOptions = {}
 //
 // if any function encourters error, it short-circuits the waterfall, and calls that last optional callback with err
 // For the intermediate callbacks, the 1st param is the error, if any
-async.waterfall([
-        function(callback) {
-            vprint("Async Function 0 - Read config file (for username/password)");
-            readConfigFile(leankitConfigFilename, function(data) {
-                // Read through the key-value pairs from config file, and populate the settings object
-                // This settings object will be used only if corresponding command-line args are not provided
-                for (var key of data.keys()) {
-                    // Push the key-value pair into a javascript object
-                    defaultOptions[key] = data.get(key);
-                }
 
-                // Get command-line args
-                // Command-line args will overwrite corresponding settings obtained from options file 
-                argv = getCommandLineArgs(defaultOptions)
+vprint("Async Function 0 - Read config file (for username/password)");
+readConfigFile(leankitConfigFilename).then(data => {
 
-                // Give the given command-line args some sensible names
-                var accountName = argv.accountName;
-                var email = argv.email;
-                var password = argv.password;
-                boardId = argv.boardId;
-                verbose = argv.verbose;
+    // Read through the key-value pairs from config file, and populate the settings object
+    // This settings object will be used only if corresponding command-line args are not provided
+    for (var key of data.keys()) {
+        // Push the key-value pair into a javascript object
+        defaultOptions[key] = data.get(key);
+    }
 
-                const auth = {
-                    account: accountName, // change these properties to match your account
-                    email: email, // for token auth, see below
-                    password: password
-                };
+    // Get command-line args
+    // Command-line args will overwrite corresponding settings obtained from options file 
+    argv = getCommandLineArgs(defaultOptions)
 
-                // Get a new object from the LeanKitClient API
-                // leankitClient = new LeanKitClient(accountName, email, password);
-                leankitClient = LeanKitClient(auth);
+    // Give the given command-line args some sensible names
+    var accountName = argv.accountName;
+    var email = argv.email;
+    var password = argv.password;
+    boardId = argv.boardId;
+    verbose = argv.verbose;
 
-                // Experiment to see if we can update (write) to a card
-                if (argv.addTag) { addTagToCard(boardId, leankitClient, argv.cardId, "Sprint 9"); }
+    const auth = {
+        account: accountName, // change these properties to match your account
+        email: email, // for token auth, see below
+        password: password
+    };
 
-                callback(null)
-            })
-        },
+    // Get a new object from the LeanKitClient API
+    // leankitClient = new LeanKitClient(accountName, email, password);
+    leankitClient = LeanKitClient(auth);
 
-        function(callback) {
-            vprint("Async Function 1 - Get Board (v1)");
-            // We're given a "callback" function (it's passed to us).   When we're done, we're supposed to call that
-            //   so async can proceed to the next (waterfall) function.  Instead, we pass this "callback" function to
-            //   our leankit leankitClient call. He'll then call the "callback" function for us when data is returned
+    // Experiment to see if we can update (write) to a card
+    if (argv.addTag) { addTagToCard(boardId, leankitClient, argv.cardId, "Sprint 9"); }
 
-            // Actually calls endpont /kanban/api/boards/<boardId>
-            // New method to call legacy v1: .v1.board.get( boardId )
-            // leankitClient.getBoard(boardId, callback)
-            leankitClient.v1.board.get(boardId, callback).then(boardResult => {
-                // res.data is the same as "board" in previous version of leankit client
-                theBoard = boardResult.data
-                vprint("Async Function 2 - Get Backlog Lanes (v1)");
-                return leankitClient.v1.board.backlog(boardId);
-            }).then(backlogResults => {
-                backlogLanes = backlogResults.data
+    vprint("Async Function 1 - Get Board (v1)");
+    // Actually calls endpont /kanban/api/boards/<boardId>
+    // New method to call legacy v1: .v1.board.get( boardId )
+    // leankitClient.getBoard(boardId, callback)
+    return leankitClient.v1.board.get(boardId)
 
-                // we've got the board and backlog lanes now
-                vprint("Async Function 3a - join lanes");
-                // Add the backlog lanes to the board
-                theBoard.Lanes = theBoard.Lanes.concat(backlogLanes);
+}).then(boardResult => {
 
-                vprint("Async Function 3b - call enhanceBoard");
-                // enchance the cards, then cascade to the next function in the waterfall
+    // boardResult.data is the same as "board" in previous version of leankit client
+    theBoard = boardResult.data
+    vprint("Async Function 2 - Get Backlog Lanes (v1)");
+    return leankitClient.v1.board.backlog(boardId);
 
-                return enhanceBoardPromise(theBoard, leankitClient);
-            }).then(enhancedBoardResults => {
-                vprint("enhanceBoard has returned")
-                // Function 4
-                try {
-                    vprint("Async Final Function - Print requested data")
-                    if (argv.printCards) { printBoardCards(theBoard, argv.printOptions, argv.pretty, argv.jsonify); }
-                    if (argv.printLanes) { printLanes(theBoard); }
-                    if (argv.printRawCard) { console.log(getCardById(theBoard, argv.cardId)) };
-                    if (argv.printRawBoard) { console.log(theBoard); }
-                    if (argv.printStats) { printStats(theBoard); }
-                    if (argv.showMethods) { console.log(Object.getOwnPropertyNames(leankitClient)) };
-                } catch (err) {
-                    callback("Error in Async Function 4: " + err, "Done");
-                }
-                process.exit();
-            })
-            // NOTE: alternative is (if we didn't have our asynchronous function to call) is we could have called our
-            //    callback function manually.   For example, "callback(null, 1,2)"    First arg is the error code, and
-            //    would typically be "null" when we simply want to proceed with next function
-        },
-        function(board, callback) {
-            vprint("Async Function 2 - Get Backlog Lanes (v1)");
-            // we've got the board now
-            theBoard = board;
-            // pass along the "callback" function provided to us, so getBoardBacklog can trigger end of this waterfall step
-            // Actually calls /kanban/api/board/<boardId>/backlog
-            // New method to call legacy v1: .v1.board.backlog( boardId )
-            leankitClient.getBoardBacklogLanes(boardId, callback)
-        },
-        function(backlogLanes, callback) {
-            try {
-                // we've got the board now
-                vprint("Async Function 3a - join lanes");
-                // Add the backlog lanes to the board
-                theBoard.Lanes = theBoard.Lanes.concat(backlogLanes);
+}).then(backlogResults => {
+    backlogLanes = backlogResults.data
 
-                vprint("Async Function 3b - call enhanceBoard");
-                // enchance the cards, then cascade to the next function in the waterfall
-                enhanceBoard(theBoard, leankitClient, callback);
+    // we've got the board and backlog lanes now
+    vprint("Async Function 3a - join lanes");
+    // Add the backlog lanes to the board
+    theBoard.Lanes = theBoard.Lanes.concat(backlogLanes);
 
-            } catch (err) {
-                callback("Error in Async Function 3: " + err, "Done");
-            }
-        },
-        function(arg1, callback) {
-            // Function 4
-            try {
-                vprint("Async Final Function - Print requested data")
-                if (argv.printCards) { printBoardCards(theBoard, argv.printOptions, argv.pretty, argv.jsonify); }
-                if (argv.printLanes) { printLanes(theBoard); }
-                if (argv.printRawCard) { console.log(getCardById(theBoard, argv.cardId)) };
-                if (argv.printRawBoard) { console.log(theBoard); }
-                if (argv.printStats) { printStats(theBoard); }
-                if (argv.showMethods) { console.log(Object.getOwnPropertyNames(leankitClient)) };
-            } catch (err) {
-                callback("Error in Async Function 4: " + err, "Done");
-            }
-        },
-    ],
-    // Final callback
-    function(err, result) {
-        console.log(err, result);
-    });
+    vprint("Async Function 3b - call enhanceBoard");
+    // enchance the cards, then cascade to the next function in the waterfall
+
+    return enhanceBoard(theBoard, leankitClient);
+
+}).then(enhancedBoardResults => {
+    // Function 4
+    try {
+        vprint("Async Final Function - Print requested data")
+        if (argv.printCards) { printBoardCards(theBoard, argv.printOptions, argv.pretty, argv.jsonify); }
+        if (argv.printLanes) { printLanes(theBoard); }
+        if (argv.printRawCard) { console.log(getCardById(theBoard, argv.cardId)) };
+        if (argv.printRawBoard) { console.log(theBoard); }
+        if (argv.printStats) { printStats(theBoard); }
+        if (argv.showMethods) { console.log(Object.getOwnPropertyNames(leankitClient)) };
+    } catch (err) {
+        callback("Error in Async Function 4: " + err, "Done");
+    }
+})
 
 // --------------------------------------------------------------------------------------------
 // ------------------------  End of File ------------------------------------------------------
