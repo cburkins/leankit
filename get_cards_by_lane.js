@@ -341,8 +341,7 @@ readConfigFile(leankitConfigFilename).then(data => {
     if (argv.addTag) { addTagToCard(boardId, leankitClient, argv.cardId, "Sprint 9"); }
 
     vprint("Async Function 1 - Get Board (v1)");
-    // Orig Call: leankitClient.getBoard(boardId, callback)
-    // This node.js method actually calls v1 endpont /kanban/api/boards/<boardId>
+    // Orig node.js method: leankitClient.getBoard(boardId, callback) ,actually calls v1 endpont /kanban/api/boards/<boardId>
     // New v2 method to call legacy v1: .v1.board.get( boardId )
     return leankitClient.v1.board.get(boardId)
 
