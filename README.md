@@ -6,6 +6,8 @@ This set of Node.js scripts uses the Leankit API to query and modify Leankit boa
 
 node ./get_cards_by_lane.js --help
 
+NOTE: Leankit API credentials are stored in <b>".leankit.config"</b> file, which is blocked from entering the repo via a .gitignore file
+
 ### Requirements: Node.js
 
 You'll need install Node.js. The following directions assume a RedHat compatible OS (including AWS Linux)
